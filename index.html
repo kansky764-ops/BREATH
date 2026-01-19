@@ -2,216 +2,95 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Lung Test</title>
+  <title>BREATH TEST</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
     body {
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background: linear-gradient(135deg, #dff3ff, #f6fbff);
-      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg,#dff3ff,#f6fbff);
       padding: 20px;
     }
-
     .card {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 18px;
+      background: #fff;
       max-width: 420px;
       margin: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      padding: 24px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.12);
     }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    p.subtitle {
-      text-align: center;
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: 600;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
-      border-radius: 12px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-
-    button {
-      background: #06c755;
-      color: white;
-      border: none;
-      margin-top: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-
-    button.stop {
-      background: #e74c3c;
-    }
-
     .timer {
       font-size: 36px;
-      font-weight: bold;
       text-align: center;
       margin: 20px 0;
-      color: #0a3d62;
     }
-
-    .result {
-      margin-top: 18px;
-      padding: 16px;
-      border-radius: 14px;
-      text-align: center;
-      display: none;
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      margin-top: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
-
-    .result img {
-      max-width: 140px;
-      margin-bottom: 10px;
-    }
-
-    .low { background: #ffecec; color: #c0392b; }
-    .mid { background: #fff7e6; color: #e67e22; }
-    .good { background: #e9f9ef; color: #27ae60; }
-    .verygood { background: #e3f2ff; color: #2980b9; }
+    .start { background:#06c755;color:#fff; }
+    .stop { background:#e74c3c;color:#fff; }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <h2>🫁 ทดสอบการกลั้นหายใจ</h2>
-    <p class="subtitle">ประเมินสมรรถภาพปอดเบื้องต้น</p>
+<div class="card">
+  <h2>🫁 ทดสอบการกลั้นหายใจ</h2>
 
-    <label>เพศ</label>
-    <select id="gender">
-      <option value="">-- เลือก --</option>
-      <option value="male">ชาย</option>
-      <option value="female">หญิง</option>
-    </select>
+  <label>เพศ</label>
+  <select id="gender">
+    <option value="">-- เลือก --</option>
+    <option value="male">ชาย</option>
+    <option value="female">หญิง</option>
+  </select>
 
-    <label>อายุ (ปี)</label>
-    <input type="number" id="age" min="5" max="100">
+  <label>อายุ</label>
+  <input type="number" id="age" min="5" max="100">
 
-    <div class="timer" id="timer">0.0 s</div>
+  <div class="timer" id="timer">0.0 s</div>
 
-    <button id="startBtn" onclick="startTest()">เริ่มกลั้นหายใจ</button>
-    <button id="stopBtn" class="stop" onclick="stopTest()" style="display:none;">
-      หยุด
-    </button>
+  <button class="start" id="startBtn" onclick="startTest()">เริ่ม</button>
+  <button class="stop" id="stopBtn" onclick="stopTest()" style="display:none;">หยุด</button>
+</div>
 
-    <div id="result" class="result"></div>
-  </div>
+<script>
+  const LIFF_ID = "2008918068";
+  let startTime, timer;
 
-  <script>
-    const LIFF_ID = "2008918068";
+  liff.init({ liffId: LIFF_ID });
 
-    let startTime = 0;
-    let timerInterval = null;
-
-    async function initLIFF() {
-      await liff.init({ liffId: LIFF_ID });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      }
+  function startTest(){
+    if(!gender.value || !age.value){
+      alert("กรุณากรอกเพศและอายุ");
+      return;
     }
-    initLIFF();
+    startTime = Date.now();
+    startBtn.style.display="none";
+    stopBtn.style.display="block";
 
-    function startTest() {
-      const gender = document.getElementById("gender").value;
-      const age = document.getElementById("age").value;
+    timer = setInterval(()=>{
+      timerEl.innerText = ((Date.now()-startTime)/1000).toFixed(1)+" s";
+    },100);
+  }
 
-      if (!gender || !age) {
-        alert("กรุณากรอกเพศและอายุ");
-        return;
-      }
+  const timerEl = document.getElementById("timer");
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
 
-      startTime = Date.now();
-      document.getElementById("startBtn").style.display = "none";
-      document.getElementById("stopBtn").style.display = "block";
-      document.getElementById("result").style.display = "none";
+  function stopTest(){
+    clearInterval(timer);
+    const seconds = ((Date.now()-startTime)/1000).toFixed(1);
 
-      timerInterval = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 1000;
-        document.getElementById("timer").innerText = elapsed.toFixed(1) + " s";
-      }, 100);
-    }
-
-    function stopTest() {
-      clearInterval(timerInterval);
-
-      const elapsed = (Date.now() - startTime) / 1000;
-      document.getElementById("startBtn").style.display = "block";
-      document.getElementById("stopBtn").style.display = "none";
-
-      const { text, className, img } = evaluate(elapsed);
-
-      const resultDiv = document.getElementById("result");
-      resultDiv.className = "result " + className;
-      resultDiv.innerHTML = `
-        <img src="${img}">
-        <div>⏱️ กลั้นได้ <b>${elapsed.toFixed(1)} วินาที</b></div>
-        <div>📊 ประเมิน: <b>${text}</b></div>
-      `;
-      resultDiv.style.display = "block";
-
-      if (liff.isInClient()) {
-        liff.sendMessages([{
-          type: "text",
-          text: `ผลทดสอบปอด 🫁\nกลั้นหายใจได้ ${elapsed.toFixed(1)} วินาที\nประเมิน: ${text}`
-        }]);
-      }
-    }
-
-    function evaluate(seconds) {
-      if (seconds < 20) {
-        return {
-          text: "ต่ำกว่ามาตรฐาน ❌",
-          className: "low",
-          img: "https://cdn.discordapp.com/attachments/1454457889891553362/1462752068237529118/ChatGPT_Image_Jan_19_2026_05_13_12_PM.png?ex=696f5585&is=696e0405&hm=6971d6cdf108c9e8b5b09567572feaa58705b7847811405ab025c13a93c2d36f&"
-        };
-      }
-      if (seconds < 40) {
-        return {
-          text: "ปานกลาง ⚠️",
-          className: "mid",
-          img: "https://cdn.discordapp.com/attachments/1454457889891553362/1462753115206979739/ChatGPT_Image_Jan_19_2026_05_14_26_PM.png?ex=696f567f&is=696e04ff&hm=140629b31925c559031da6cfd63d6b377d9f098b0bbb7af4cf1055280881bde1"
-        };
-      }
-      if (seconds < 60) {
-        return {
-          text: "ดี ✅",
-          className: "good",
-          img: "https://cdn.discordapp.com/attachments/1454457889891553362/1462752067801317571/ChatGPT_Image_Jan_19_2026_05_13_31_PM.png?ex=696f5585&is=696e0405&hm=df75cbb39731c1c4f3b0f0cf5d1ef516b8b774956a6e8b3d4b203d742eddbaaf&"
-        };
-      }
-      return {
-        text: "ดีมาก 💪",
-        className: "verygood",
-        img: "https://cdn.discordapp.com/attachments/1454457889891553362/1462754420621054002/ChatGPT_Image_Jan_19_2026_05_22_22_PM.png?ex=696f57b6&is=696e0636&hm=a01e6132bd7570aeef21e73b02edd604ada37d7414832d8522ab80047961e2a7"
-      };
-    }
-  </script>
+    // เปลี่ยนหน้าไป result.html พร้อมส่งค่า
+    window.location.href = `result.html?time=${seconds}`;
+  }
+</script>
 </body>
 </html>
