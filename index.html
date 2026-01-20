@@ -59,12 +59,6 @@
       margin-top: 18px;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
 
     button.stop {
@@ -88,7 +82,7 @@
     }
 
     .result img {
-      max-width: 140px;
+      max-width: 120px;
       margin-bottom: 10px;
     }
 
@@ -132,9 +126,7 @@
 
     async function initLIFF() {
       await liff.init({ liffId: LIFF_ID });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      }
+      if (!liff.isLoggedIn()) liff.login();
     }
     initLIFF();
 
@@ -165,13 +157,20 @@
       document.getElementById("startBtn").style.display = "block";
       document.getElementById("stopBtn").style.display = "none";
 
-      const { text, className, img } = evaluate(elapsed);
+      const age = parseInt(document.getElementById("age").value);
+      const gender = document.getElementById("gender").value;
+
+      const expected = getExpectedTime(age, gender);
+      const ratio = elapsed / expected;
+
+      const { text, className, img } = evaluate(ratio);
 
       const resultDiv = document.getElementById("result");
       resultDiv.className = "result " + className;
       resultDiv.innerHTML = `
         <img src="${img}">
         <div>⏱️ กลั้นได้ <b>${elapsed.toFixed(1)} วินาที</b></div>
+        <div>📌 ค่าคาดหวัง ≈ <b>${expected.toFixed(1)} วินาที</b></div>
         <div>📊 ประเมิน: <b>${text}</b></div>
       `;
       resultDiv.style.display = "block";
@@ -179,27 +178,39 @@
       if (liff.isInClient()) {
         liff.sendMessages([{
           type: "text",
-          text: ผลทดสอบปอด 🫁\nกลั้นหายใจได้ ${elapsed.toFixed(1)} วินาที\nประเมิน: ${text}
+          text: `ผลทดสอบปอด 🫁
+กลั้นหายใจได้ ${elapsed.toFixed(1)} วินาที
+ค่าคาดหวัง ≈ ${expected.toFixed(1)} วินาที
+ประเมิน: ${text}`
         }]);
       }
     }
 
-    function evaluate(seconds) {
-      if (seconds < 20) {
+    function getExpectedTime(age, gender) {
+      let base = gender === "male" ? 60 : 50;
+
+      if (age > 30) base -= (age - 30) * 0.5;
+      if (age < 20) base += (20 - age) * 0.4;
+
+      return Math.max(base, 20);
+    }
+
+    function evaluate(ratio) {
+      if (ratio < 0.6) {
         return {
           text: "ต่ำกว่ามาตรฐาน ❌",
           className: "low",
           img: "https://cdn-icons-png.flaticon.com/512/595/595067.png"
         };
       }
-      if (seconds < 40) {
+      if (ratio < 0.😎 {
         return {
           text: "ปานกลาง ⚠️",
           className: "mid",
           img: "https://cdn-icons-png.flaticon.com/512/2599/2599164.png"
         };
       }
-      if (seconds < 60) {
+      if (ratio <= 1.1) {
         return {
           text: "ดี ✅",
           className: "good",
